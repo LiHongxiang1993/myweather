@@ -1,5 +1,6 @@
 package com.myweather.android;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -22,6 +23,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.util.Util;
 import com.myweather.android.gson.Forecast;
 import com.myweather.android.gson.Weather;
+import com.myweather.android.service.AutoUpdateService;
 import com.myweather.android.util.HttpUtil;
 import com.myweather.android.util.Utility;
 
@@ -49,6 +51,7 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView carWashText;
     private TextView sportText;
     private ImageView bingPicImg;
+    private String mweatherId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,7 +81,7 @@ public class WeatherActivity extends AppCompatActivity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = prefs.getString("weather", null);
         String bingPic = prefs.getString("bing_pic", null);
-        final String weatherId;
+
         if (bingPic != null) {
             Glide.with(this).load(bingPic).into(bingPicImg);
         } else {
@@ -86,17 +89,17 @@ public class WeatherActivity extends AppCompatActivity {
         }
         if (weatherString != null) {
             Weather weather = Utility.handleWeatherResponse(weatherString);
-            weatherId=weather.basic.weatherId;
+            mweatherId=weather.basic.weatherId;
             showWeatherInfo(weather);
         } else {
-            weatherId = getIntent().getStringExtra("weather_id");
+            mweatherId = getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
-            requestWeather(weatherId);
+            requestWeather(mweatherId);
         }
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
             @Override
             public void onRefresh() {
-                requestWeather(weatherId);
+                requestWeather(mweatherId);
             }
         });
         navButton.setOnClickListener(new View.OnClickListener() {
@@ -203,5 +206,7 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText.setText(carWash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 }
